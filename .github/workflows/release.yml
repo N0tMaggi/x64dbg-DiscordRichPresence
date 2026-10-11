@@ -47,4 +47,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.version }}
+        shell: bash
         run: gh release create "$TAG" x64dbg-DiscordRichPresence.zip --target "${{ github.sha }}" --title "$TAG" --generate-notes
