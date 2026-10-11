@@ -1,0 +1,44 @@
+name: Build and release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      # The project targets VS 2026 (v145). GitHub's runner ships an older toolset, so override it here.
+      - name: Build x64
+        run: msbuild DiscordRichPresence.sln -m -p:Configuration=Release -p:Platform=x64 -p:PlatformToolset=v143
+
+      - name: Build x86
+        run: msbuild DiscordRichPresence.sln -m -p:Configuration=Release -p:Platform=x86 -p:PlatformToolset=v143
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pkg/x64/plugins, pkg/x32/plugins | Out-Null
+          Copy-Item bin/x64/Release/DiscordRichPresence.dp64 pkg/x64/plugins/
+          Copy-Item bin/Win32/Release/DiscordRichPresence.dp32 pkg/x32/plugins/
+          Copy-Item README.md pkg/
+          Compress-Archive -Path pkg/* -DestinationPath x64dbg-DiscordRichPresence.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: x64dbg-DiscordRichPresence
+          path: x64dbg-DiscordRichPresence.zip
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${{ github.ref_name }}" x64dbg-DiscordRichPresence.zip --title "${{ github.ref_name }}" --generate-notes
