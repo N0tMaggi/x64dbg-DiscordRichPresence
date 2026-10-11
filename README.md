@@ -68,6 +68,8 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
+Or start **Actions > Build and release > Run workflow** and enter a version (e.g. `v1.0.1`).
+
 ## Credits
 
 - [discord-rpc](https://github.com/discord/discord-rpc) (MIT) - in `third_party/DiscordSDK`

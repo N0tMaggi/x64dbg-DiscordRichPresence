@@ -4,6 +4,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to create, e.g. v1.0.0 (leave empty to only build)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -38,7 +43,8 @@ jobs:
           path: x64dbg-DiscordRichPresence.zip
 
       - name: Create release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || inputs.version != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${{ github.ref_name }}" x64dbg-DiscordRichPresence.zip --title "${{ github.ref_name }}" --generate-notes
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.version }}
+        run: gh release create "$TAG" x64dbg-DiscordRichPresence.zip --target "${{ github.sha }}" --title "$TAG" --generate-notes
